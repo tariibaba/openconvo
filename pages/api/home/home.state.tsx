@@ -27,6 +27,7 @@ export interface HomeInitialState {
   defaultModelId: OpenAIModelID | undefined;
   serverSideApiKeyIsSet: boolean;
   serverSidePluginKeysSet: boolean;
+  messageStreamingId: string | undefined;
 }
 
 export const initialState: HomeInitialState = {
@@ -35,6 +36,7 @@ export const initialState: HomeInitialState = {
   pluginKeys: [],
   lightMode: 'dark',
   messageIsStreaming: false,
+  messageStreamingId: undefined,
   modelError: null,
   models: [],
   folders: [],

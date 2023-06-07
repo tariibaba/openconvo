@@ -5,6 +5,19 @@ export interface Message {
   content: string;
 }
 
+export interface Message_v2 {
+  role: Role;
+  id: string;
+  content: string;
+  // headSiblingId: string;
+  siblingCount: number;
+  nextSiblingId?: string;
+  prevSiblingId?: string;
+  active: boolean;
+  parentId?: string;
+  childId?: string;
+}
+
 export type Role = 'assistant' | 'user';
 
 export interface ChatBody {
@@ -18,7 +31,9 @@ export interface ChatBody {
 export interface Conversation {
   id: string;
   name: string;
-  messages: Message[];
+  messageHeadId?: string;
+  allMessages: Record<string, Message_v2>;
+  messages: (Message | Message_v2)[];
   model: OpenAIModel;
   prompt: string;
   temperature: number;

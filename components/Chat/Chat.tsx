@@ -14,13 +14,14 @@ import { useTranslation } from 'next-i18next';
 
 import { getEndpoint } from '@/utils/app/api';
 import {
+  displayedLinkedMessages,
   saveConversation,
   saveConversations,
   updateConversation,
 } from '@/utils/app/conversation';
 import { throttle } from '@/utils/data/throttle';
 
-import { ChatBody, Conversation, Message } from '@/types/chat';
+import { ChatBody, Conversation, Message, Message_v2, Role } from '@/types/chat';
 import { Plugin } from '@/types/plugin';
 
 import HomeContext from '@/pages/api/home/home.context';
@@ -29,10 +30,12 @@ import Spinner from '../Spinner';
 import { ChatInput } from './ChatInput';
 import { ChatLoader } from './ChatLoader';
 import { ErrorMessageDiv } from './ErrorMessageDiv';
+import { MemoizedChatMessage } from './MemoizedChatMessage';
 import { ModelSelect } from './ModelSelect';
 import { SystemPrompt } from './SystemPrompt';
 import { TemperatureSlider } from './Temperature';
-import { MemoizedChatMessage } from './MemoizedChatMessage';
+
+import { v4 } from 'uuid';
 
 interface Props {
   stopConversationRef: MutableRefObject<boolean>;
@@ -61,31 +64,151 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
   const [currentMessage, setCurrentMessage] = useState<Message>();
   const [autoScrollEnabled, setAutoScrollEnabled] = useState<boolean>(true);
   const [showSettings, setShowSettings] = useState<boolean>(false);
-  const [showScrollDownButton, setShowScrollDownButton] =
-    useState<boolean>(false);
+  const [showScrollDownButton, setShowScrollDownButton] = useState<boolean>(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const getLastChildId = () => {
+    let lastChildChildId: string | undefined = selectedConversation?.messageHeadId;
+    let currChildId: string | undefined = undefined;
+    const allMessages = selectedConversation?.allMessages!;
+    while (lastChildChildId) {
+      let nextChild = allMessages[lastChildChildId!]!;
+      while (!nextChild.active) {
+        lastChildChildId = allMessages[lastChildChildId!].nextSiblingId;
+        nextChild = allMessages[lastChildChildId!]!;
+      }
+      currChildId = lastChildChildId;
+      lastChildChildId = allMessages![lastChildChildId!].childId;
+    }
+    return currChildId;
+  };
+
+  const addMessageToConversation = (params: {
+    conversation: Conversation;
+    message: Message;
+    lastChildId?: string;
+  }) => {
+    const { conversation, message, lastChildId } = params;
+    const newChildId = v4();
+    const startFromHead = !lastChildId;
+    const lastChild = lastChildId ? conversation.allMessages[lastChildId] : undefined;
+    const messageHeadId = conversation.messageHeadId;
+    let lastChildChildId = startFromHead ? messageHeadId : lastChild?.childId;
+    const allMessages = conversation.allMessages;
+    let lastChildChild = lastChildChildId ? conversation.allMessages[lastChildChildId] : undefined;
+    let firstLastChildChildId = lastChildChildId;
+    let pos = 1;
+    let newSiblingCount = 1;
+    let nextLastChildChild = lastChildChild;
+    let nextLastChildChildId = lastChildChildId;
+    while (nextLastChildChild) {
+      lastChildChildId = nextLastChildChildId;
+      lastChildChild = nextLastChildChild;
+      lastChildChild.active = false;
+      nextLastChildChildId = allMessages[lastChildChildId!].nextSiblingId;
+      nextLastChildChild = allMessages[nextLastChildChildId!]!;
+      pos++;
+    }
+    let prevSiblingId = undefined;
+    if (lastChildChildId) {
+      let firstLastChildChild = allMessages[firstLastChildChildId!];
+      newSiblingCount = firstLastChildChild.siblingCount + 1;
+      while (firstLastChildChild) {
+        firstLastChildChild.siblingCount = newSiblingCount;
+        firstLastChildChildId = allMessages[firstLastChildChildId!].nextSiblingId;
+        firstLastChildChild = allMessages[firstLastChildChildId!]!;
+      }
+      const lastChildChild = conversation!.allMessages[lastChildChildId];
+      lastChildChild.nextSiblingId = newChildId;
+      prevSiblingId = lastChildChild.id;
+    } else {
+      if (startFromHead) {
+        conversation!.messageHeadId = newChildId;
+      } else {
+        conversation!.allMessages[lastChildId!].childId = newChildId;
+      }
+    }
+    return (conversation!.allMessages[newChildId] = {
+      active: true,
+      content: message.content,
+      role: message.role,
+      siblingCount: newSiblingCount,
+      id: newChildId,
+      parentId: lastChildId!,
+      prevSiblingId,
+    });
+  };
+
   const handleSend = useCallback(
-    async (message: Message, deleteCount = 0, plugin: Plugin | null = null) => {
+    async (
+      message: Message,
+      deleteCount = 0,
+      plugin: Plugin | null = null,
+      lastMessageId?: string,
+    ) => {
       if (selectedConversation) {
         let updatedConversation: Conversation;
-        if (deleteCount) {
-          const updatedMessages = [...selectedConversation.messages];
-          for (let i = 0; i < deleteCount; i++) {
-            updatedMessages.pop();
+        let lastChildId: string | undefined;
+        if (selectedConversation.messages?.length) {
+          if (deleteCount) {
+            const updatedMessages = [...selectedConversation.messages];
+            for (let i = 0; i < deleteCount; i++) {
+              updatedMessages.pop();
+            }
+            const lastMessage = updatedMessages[updatedMessages.length - 1];
+            updatedConversation = { ...selectedConversation };
+            if (lastMessage?.role !== 'user') {
+              updatedConversation = {
+                ...selectedConversation,
+                messages: [...updatedMessages, message],
+              };
+            }
+            updatedConversation = {
+              ...updatedConversation,
+              messages: [...updatedMessages, { content: '', role: 'assistant' }],
+            };
+          } else {
+            updatedConversation = {
+              ...selectedConversation,
+              messages: [
+                ...selectedConversation.messages,
+                message,
+                { content: '', role: 'assistant' },
+              ],
+            };
           }
-          updatedConversation = {
-            ...selectedConversation,
-            messages: [...updatedMessages, message],
-          };
         } else {
-          updatedConversation = {
-            ...selectedConversation,
-            messages: [...selectedConversation.messages, message],
-          };
+          if (lastMessageId) {
+            lastChildId = selectedConversation.allMessages[lastMessageId].parentId;
+          } else {
+            lastChildId = getLastChildId();
+            if (deleteCount) {
+              for (let i = 0; i < deleteCount; i++) {
+                const allMessages = selectedConversation.allMessages!;
+                const parentId = allMessages[lastChildId!].parentId!;
+                const parent = allMessages[parentId];
+                lastChildId = parent?.id;
+              }
+            }
+          }
+          const lastChild = selectedConversation.allMessages[lastChildId!];
+          if (lastChild?.role !== 'user') {
+            lastChildId = addMessageToConversation({
+              conversation: selectedConversation,
+              message,
+              lastChildId,
+            }).id;
+          }
+          lastChildId = addMessageToConversation({
+            conversation: selectedConversation,
+            message: { role: 'assistant', content: '' },
+            lastChildId,
+          }).id;
+
+          updatedConversation = selectedConversation;
         }
         homeDispatch({
           field: 'selectedConversation',
@@ -93,9 +216,15 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
         });
         homeDispatch({ field: 'loading', value: true });
         homeDispatch({ field: 'messageIsStreaming', value: true });
+        homeDispatch({ field: 'messageStreamingId', value: lastChildId });
         const chatBody: ChatBody = {
           model: updatedConversation.model,
-          messages: updatedConversation.messages,
+          messages: updatedConversation!.messages.length
+            ? updatedConversation!.messages
+            : displayedLinkedMessages(updatedConversation!).map((message) => ({
+                content: message.content,
+                role: message.role,
+              })),
           key: apiKey,
           prompt: updatedConversation.prompt,
           temperature: updatedConversation.temperature,
@@ -139,8 +268,7 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
         if (!plugin) {
           if (updatedConversation.messages.length === 1) {
             const { content } = message;
-            const customName =
-              content.length > 30 ? content.substring(0, 30) + '...' : content;
+            const customName = content.length > 30 ? content.substring(0, 30) + '...' : content;
             updatedConversation = {
               ...updatedConversation,
               name: customName,
@@ -150,7 +278,7 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
           const reader = data.getReader();
           const decoder = new TextDecoder();
           let done = false;
-          let isFirst = true;
+          let isFirst = false;
           let text = '';
           while (!done) {
             if (stopConversationRef.current === true) {
@@ -162,23 +290,11 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
             done = doneReading;
             const chunkValue = decoder.decode(value);
             text += chunkValue;
-            if (isFirst) {
-              isFirst = false;
-              const updatedMessages: Message[] = [
-                ...updatedConversation.messages,
-                { role: 'assistant', content: chunkValue },
-              ];
-              updatedConversation = {
-                ...updatedConversation,
-                messages: updatedMessages,
-              };
-              homeDispatch({
-                field: 'selectedConversation',
-                value: updatedConversation,
-              });
-            } else {
-              const updatedMessages: Message[] =
-                updatedConversation.messages.map((message, index) => {
+            const isUsingPrevMessageSchema = Boolean(updatedConversation.messages?.length);
+
+            if (isUsingPrevMessageSchema) {
+              const updatedMessages: Message[] = updatedConversation.messages.map(
+                (message, index) => {
                   if (index === updatedConversation.messages.length - 1) {
                     return {
                       ...message,
@@ -186,26 +302,28 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
                     };
                   }
                   return message;
-                });
+                },
+              );
               updatedConversation = {
                 ...updatedConversation,
                 messages: updatedMessages,
               };
-              homeDispatch({
-                field: 'selectedConversation',
-                value: updatedConversation,
-              });
+            } else {
+              const message = updatedConversation.allMessages[lastChildId!];
+              message.content = text;
             }
+            homeDispatch({
+              field: 'selectedConversation',
+              value: updatedConversation,
+            });
           }
           saveConversation(updatedConversation);
-          const updatedConversations: Conversation[] = conversations.map(
-            (conversation) => {
-              if (conversation.id === selectedConversation.id) {
-                return updatedConversation;
-              }
-              return conversation;
-            },
-          );
+          const updatedConversations: Conversation[] = conversations.map((conversation) => {
+            if (conversation.id === selectedConversation.id) {
+              return updatedConversation;
+            }
+            return conversation;
+          });
           if (updatedConversations.length === 0) {
             updatedConversations.push(updatedConversation);
           }
@@ -213,6 +331,7 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
           saveConversations(updatedConversations);
           homeDispatch({ field: 'messageIsStreaming', value: false });
         } else {
+          // do stuff here
           const { answer } = await response.json();
           const updatedMessages: Message[] = [
             ...updatedConversation.messages,
@@ -227,14 +346,12 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
             value: updateConversation,
           });
           saveConversation(updatedConversation);
-          const updatedConversations: Conversation[] = conversations.map(
-            (conversation) => {
-              if (conversation.id === selectedConversation.id) {
-                return updatedConversation;
-              }
-              return conversation;
-            },
-          );
+          const updatedConversations: Conversation[] = conversations.map((conversation) => {
+            if (conversation.id === selectedConversation.id) {
+              return updatedConversation;
+            }
+            return conversation;
+          });
           if (updatedConversations.length === 0) {
             updatedConversations.push(updatedConversation);
           }
@@ -245,13 +362,7 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
         }
       }
     },
-    [
-      apiKey,
-      conversations,
-      pluginKeys,
-      selectedConversation,
-      stopConversationRef,
-    ],
+    [apiKey, conversations, pluginKeys, selectedConversation, stopConversationRef],
   );
 
   const scrollToBottom = useCallback(() => {
@@ -263,8 +374,7 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
 
   const handleScroll = () => {
     if (chatContainerRef.current) {
-      const { scrollTop, scrollHeight, clientHeight } =
-        chatContainerRef.current;
+      const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current;
       const bottomTolerance = 30;
 
       if (scrollTop + clientHeight < scrollHeight - bottomTolerance) {
@@ -307,21 +417,15 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
   };
   const throttledScrollDown = throttle(scrollDown, 250);
 
-  // useEffect(() => {
-  //   console.log('currentMessage', currentMessage);
-  //   if (currentMessage) {
-  //     handleSend(currentMessage);
-  //     homeDispatch({ field: 'currentMessage', value: undefined });
-  //   }
-  // }, [currentMessage]);
-
   useEffect(() => {
     throttledScrollDown();
-    selectedConversation &&
-      setCurrentMessage(
-        selectedConversation.messages[selectedConversation.messages.length - 2],
-      );
-  }, [selectedConversation, throttledScrollDown]);
+    const isUsingPrevMessageSchema = Boolean(selectedConversation?.messages.length);
+    if (!selectedConversation) return;
+    const messages = isUsingPrevMessageSchema
+      ? selectedConversation.messages
+      : displayedLinkedMessages(selectedConversation);
+    setCurrentMessage(messages[messages.length - 2]);
+  }, [selectedConversation]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -347,6 +451,10 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
     };
   }, [messagesEndRef]);
 
+  const messages = selectedConversation?.messages.length
+    ? selectedConversation?.messages
+    : displayedLinkedMessages(selectedConversation!);
+
   return (
     <div className="relative flex-1 overflow-hidden bg-white dark:bg-[#343541]">
       {!(apiKey || serverSideApiKeyIsSet) ? (
@@ -362,17 +470,13 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
           </div>
           <div className="text-center text-gray-500 dark:text-gray-400">
             <div className="mb-2">
-              Chatbot UI allows you to plug in your API key to use this UI with
-              their API.
+              Chatbot UI allows you to plug in your API key to use this UI with their API.
             </div>
             <div className="mb-2">
-              It is <span className="italic">only</span> used to communicate
-              with their API.
+              It is <span className="italic">only</span> used to communicate with their API.
             </div>
             <div className="mb-2">
-              {t(
-                'Please set your OpenAI API key in the bottom left of the sidebar.',
-              )}
+              {t('Please set your OpenAI API key in the bottom left of the sidebar.')}
             </div>
             <div>
               {t("If you don't have an OpenAI API key, you can get one here: ")}
@@ -396,7 +500,7 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
             ref={chatContainerRef}
             onScroll={handleScroll}
           >
-            {selectedConversation?.messages.length === 0 ? (
+            {messages.length === 0 ? (
               <>
                 <div className="mx-auto flex flex-col space-y-5 md:space-y-10 px-3 pt-5 md:pt-12 sm:max-w-[600px]">
                   <div className="text-center text-3xl font-semibold text-gray-800 dark:text-gray-100">
@@ -414,10 +518,10 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
                       <ModelSelect />
 
                       <SystemPrompt
-                        conversation={selectedConversation}
+                        conversation={selectedConversation!}
                         prompts={prompts}
                         onChangePrompt={(prompt) =>
-                          handleUpdateConversation(selectedConversation, {
+                          handleUpdateConversation(selectedConversation!, {
                             key: 'prompt',
                             value: prompt,
                           })
@@ -427,7 +531,7 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
                       <TemperatureSlider
                         label={t('Temperature')}
                         onChangeTemperature={(temperature) =>
-                          handleUpdateConversation(selectedConversation, {
+                          handleUpdateConversation(selectedConversation!, {
                             key: 'temperature',
                             value: temperature,
                           })
@@ -440,18 +544,12 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
             ) : (
               <>
                 <div className="sticky top-0 z-10 flex justify-center border border-b-neutral-300 bg-neutral-100 py-2 text-sm text-neutral-500 dark:border-none dark:bg-[#444654] dark:text-neutral-200">
-                  {t('Model')}: {selectedConversation?.model.name} | {t('Temp')}
-                  : {selectedConversation?.temperature} |
-                  <button
-                    className="ml-2 cursor-pointer hover:opacity-50"
-                    onClick={handleSettings}
-                  >
+                  {t('Model')}: {selectedConversation?.model.name} | {t('Temp')}:{' '}
+                  {selectedConversation?.temperature} |
+                  <button className="ml-2 cursor-pointer hover:opacity-50" onClick={handleSettings}>
                     <IconSettings size={18} />
                   </button>
-                  <button
-                    className="ml-2 cursor-pointer hover:opacity-50"
-                    onClick={onClearAll}
-                  >
+                  <button className="ml-2 cursor-pointer hover:opacity-50" onClick={onClearAll}>
                     <IconClearAll size={18} />
                   </button>
                 </div>
@@ -463,28 +561,29 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
                   </div>
                 )}
 
-                {selectedConversation?.messages.map((message, index) => (
+                {messages.map((message, index) => (
                   <MemoizedChatMessage
-                    key={index}
+                    key={(message as any).id ?? index}
                     message={message}
+                    loading={
+                      message.role === 'assistant' && loading && index === messages.length - 1
+                    }
                     messageIndex={index}
                     onEdit={(editedMessage) => {
                       setCurrentMessage(editedMessage);
+                      const latestMessages = displayedLinkedMessages(selectedConversation!);
                       // discard edited message and the ones that come after then resend
                       handleSend(
                         editedMessage,
-                        selectedConversation?.messages.length - index,
+                        latestMessages.length - index,
+                        undefined,
+                        (message as any).id,
                       );
                     }}
                   />
                 ))}
 
-                {loading && <ChatLoader />}
-
-                <div
-                  className="h-[162px] bg-white dark:bg-[#343541]"
-                  ref={messagesEndRef}
-                />
+                <div className="h-[162px] bg-white dark:bg-[#343541]" ref={messagesEndRef} />
               </>
             )}
           </div>
@@ -499,7 +598,7 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
             onScrollDownClick={handleScrollDown}
             onRegenerate={() => {
               if (currentMessage) {
-                handleSend(currentMessage, 2, null);
+                handleSend(currentMessage, 1, null);
               }
             }}
             showScrollDownButton={showScrollDownButton}

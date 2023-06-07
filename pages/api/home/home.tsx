@@ -11,16 +11,9 @@ import { useCreateReducer } from '@/hooks/useCreateReducer';
 import useErrorService from '@/services/errorService';
 import useApiService from '@/services/useApiService';
 
-import {
-  cleanConversationHistory,
-  cleanSelectedConversation,
-} from '@/utils/app/clean';
+import { cleanConversationHistory, cleanSelectedConversation } from '@/utils/app/clean';
 import { DEFAULT_SYSTEM_PROMPT, DEFAULT_TEMPERATURE } from '@/utils/app/const';
-import {
-  saveConversation,
-  saveConversations,
-  updateConversation,
-} from '@/utils/app/conversation';
+import { saveConversation, saveConversations, updateConversation } from '@/utils/app/conversation';
 import { saveFolders } from '@/utils/app/folders';
 import { savePrompts } from '@/utils/app/prompts';
 import { getSettings } from '@/utils/app/settings';
@@ -47,11 +40,7 @@ interface Props {
   defaultModelId: OpenAIModelID;
 }
 
-const Home = ({
-  serverSideApiKeyIsSet,
-  serverSidePluginKeysSet,
-  defaultModelId,
-}: Props) => {
+const Home = ({ serverSideApiKeyIsSet, serverSidePluginKeysSet, defaultModelId }: Props) => {
   const { t } = useTranslation('chat');
   const { getModels } = useApiService();
   const { getModelsError } = useErrorService();
@@ -185,6 +174,8 @@ const Home = ({
       id: uuidv4(),
       name: t('New Conversation'),
       messages: [],
+      allMessages: {},
+      messageHeadId: undefined,
       model: lastConversation?.model || {
         id: OpenAIModels[defaultModelId].id,
         name: OpenAIModels[defaultModelId].name,
@@ -207,19 +198,13 @@ const Home = ({
     dispatch({ field: 'loading', value: false });
   };
 
-  const handleUpdateConversation = (
-    conversation: Conversation,
-    data: KeyValuePair,
-  ) => {
+  const handleUpdateConversation = (conversation: Conversation, data: KeyValuePair) => {
     const updatedConversation = {
       ...conversation,
       [data.key]: data.value,
     };
 
-    const { single, all } = updateConversation(
-      updatedConversation,
-      conversations,
-    );
+    const { single, all } = updateConversation(updatedConversation, conversations);
 
     dispatch({ field: 'selectedConversation', value: single });
     dispatch({ field: 'conversations', value: all });
@@ -234,8 +219,7 @@ const Home = ({
   }, [selectedConversation]);
 
   useEffect(() => {
-    defaultModelId &&
-      dispatch({ field: 'defaultModelId', value: defaultModelId });
+    defaultModelId && dispatch({ field: 'defaultModelId', value: defaultModelId });
     serverSideApiKeyIsSet &&
       dispatch({
         field: 'serverSideApiKeyIsSet',
@@ -304,22 +288,16 @@ const Home = ({
 
     const conversationHistory = localStorage.getItem('conversationHistory');
     if (conversationHistory) {
-      const parsedConversationHistory: Conversation[] =
-        JSON.parse(conversationHistory);
-      const cleanedConversationHistory = cleanConversationHistory(
-        parsedConversationHistory,
-      );
+      const parsedConversationHistory: Conversation[] = JSON.parse(conversationHistory);
+      const cleanedConversationHistory = cleanConversationHistory(parsedConversationHistory);
 
       dispatch({ field: 'conversations', value: cleanedConversationHistory });
     }
 
     const selectedConversation = localStorage.getItem('selectedConversation');
     if (selectedConversation) {
-      const parsedSelectedConversation: Conversation =
-        JSON.parse(selectedConversation);
-      const cleanedSelectedConversation = cleanSelectedConversation(
-        parsedSelectedConversation,
-      );
+      const parsedSelectedConversation: Conversation = JSON.parse(selectedConversation);
+      const cleanedSelectedConversation = cleanSelectedConversation(parsedSelectedConversation);
 
       dispatch({
         field: 'selectedConversation',
@@ -333,6 +311,7 @@ const Home = ({
           id: uuidv4(),
           name: t('New Conversation'),
           messages: [],
+          allMessages: {},
           model: OpenAIModels[defaultModelId],
           prompt: DEFAULT_SYSTEM_PROMPT,
           temperature: lastConversation?.temperature ?? DEFAULT_TEMPERATURE,
@@ -340,12 +319,7 @@ const Home = ({
         },
       });
     }
-  }, [
-    defaultModelId,
-    dispatch,
-    serverSideApiKeyIsSet,
-    serverSidePluginKeysSet,
-  ]);
+  }, [defaultModelId, dispatch, serverSideApiKeyIsSet, serverSidePluginKeysSet]);
 
   return (
     <HomeContext.Provider
@@ -398,9 +372,7 @@ export default Home;
 export const getServerSideProps: GetServerSideProps = async ({ locale }) => {
   const defaultModelId =
     (process.env.DEFAULT_MODEL &&
-      Object.values(OpenAIModelID).includes(
-        process.env.DEFAULT_MODEL as OpenAIModelID,
-      ) &&
+      Object.values(OpenAIModelID).includes(process.env.DEFAULT_MODEL as OpenAIModelID) &&
       process.env.DEFAULT_MODEL) ||
     fallbackModelID;
 

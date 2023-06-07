@@ -1,6 +1,7 @@
 module.exports = {
   trailingComma: 'all',
   singleQuote: true,
+  printWidth: 100,
   plugins: [
     'prettier-plugin-tailwindcss',
     '@trivago/prettier-plugin-sort-imports',
