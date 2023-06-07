@@ -158,7 +158,8 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
             for (let i = 0; i < deleteCount; i++) {
               updatedMessages.pop();
             }
-            const lastMessage = updatedMessages[updatedMessages.length - 1];
+            const lastMessage =
+              updatedMessages.length > 0 ? updatedMessages[updatedMessages.length - 1] : undefined;
             updatedConversation = { ...selectedConversation };
             if (lastMessage?.role !== 'user') {
               updatedConversation = {
