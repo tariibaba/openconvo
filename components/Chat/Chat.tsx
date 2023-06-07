@@ -571,7 +571,10 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
                     messageIndex={index}
                     onEdit={(editedMessage) => {
                       setCurrentMessage(editedMessage);
-                      const latestMessages = displayedLinkedMessages(selectedConversation!);
+                      const latestMessages =
+                        selectedConversation!.messages.length > 0
+                          ? selectedConversation!.messages
+                          : displayedLinkedMessages(selectedConversation!);
                       // discard edited message and the ones that come after then resend
                       handleSend(
                         editedMessage,
