@@ -9,7 +9,6 @@ export interface Message_v2 {
   role: Role;
   id: string;
   content: string;
-  // headSiblingId: string;
   siblingCount: number;
   nextSiblingId?: string;
   prevSiblingId?: string;
