@@ -334,7 +334,7 @@ const Home = ({ serverSideApiKeyIsSet, serverSidePluginKeysSet, defaultModelId }
       }}
     >
       <Head>
-        <title>Chatbot UI</title>
+        <title>OpenConvo</title>
         <meta name="description" content="ChatGPT but better." />
         <meta
           name="viewport"
