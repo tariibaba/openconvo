@@ -164,13 +164,14 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
             if (lastMessage?.role !== 'user') {
               updatedConversation = {
                 ...selectedConversation,
-                messages: [...updatedMessages, message],
+                messages: [...updatedMessages, message, { content: '', role: 'assistant' }],
+              };
+            } else {
+              updatedConversation = {
+                ...updatedConversation,
+                messages: [...updatedMessages, { content: '', role: 'assistant' }],
               };
             }
-            updatedConversation = {
-              ...updatedConversation,
-              messages: [...updatedMessages, { content: '', role: 'assistant' }],
-            };
           } else {
             updatedConversation = {
               ...selectedConversation,
