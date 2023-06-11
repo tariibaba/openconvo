@@ -332,6 +332,25 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
           homeDispatch({ field: 'conversations', value: updatedConversations });
           saveConversations(updatedConversations);
           homeDispatch({ field: 'messageIsStreaming', value: false });
+          const res = await fetch('/api/chat/name', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              messages: displayedLinkedMessages(updatedConversation),
+              key: apiKey,
+            }),
+          });
+          if (res.ok) {
+            const convoName = (await res.json()).name;
+            if (updatedConversation.name === 'New Conversation') {
+              handleUpdateConversation(updatedConversation, {
+                key: 'name',
+                value: convoName,
+              });
+            }
+          }
         } else {
           // do stuff here
           const { answer } = await response.json();
