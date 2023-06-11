@@ -2,7 +2,7 @@
 
 OpenConvo is an open source chat UI for AI models.
 
-It is based on [OpenConvo](https://github.com/mckaywrigley/chatbot-ui).
+It is based on [ChatbotUI](https://github.com/mckaywrigley/chatbot-ui).
 
 <!-- See a [demo](https://twitter.com/mckaywrigley/status/1640380021423603713?s=46&t=AowqkodyK6B4JccSOxSPew). -->
 
