@@ -245,7 +245,7 @@ export const ChatMessage: FC<Props> = memo(({ loading, message, messageIndex, on
                     <button
                       className="h-[40px] rounded-md bg-blue-500 px-4 py-1 text-sm font-medium text-white enabled:hover:bg-blue-600 disabled:opacity-50"
                       onClick={handleEditMessage}
-                      disabled={messageContent.trim().length <= 0}
+                      disabled={messageContent.trim().length <= 0 || messageIsStreaming}
                     >
                       {t('Save & Submit')}
                     </button>
