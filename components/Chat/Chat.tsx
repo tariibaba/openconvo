@@ -56,6 +56,8 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
       modelError,
       loading,
       prompts,
+      isNewConversation,
+      abortTarget,
     },
     handleUpdateConversation,
     dispatch: homeDispatch,
@@ -247,6 +249,12 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
           });
         }
         const controller = new AbortController();
+        const firstAbortListener = () => {
+          controller.abort();
+          homeDispatch({ field: 'loading', value: false });
+          homeDispatch({ field: 'messageIsStreaming', value: false });
+        };
+        abortTarget?.addEventListener('abort', firstAbortListener);
         const response = await fetch(endpoint, {
           method: 'POST',
           headers: {
@@ -267,24 +275,22 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
           homeDispatch({ field: 'messageIsStreaming', value: false });
           return;
         }
+        abortTarget?.removeEventListener('abort', firstAbortListener);
         if (!plugin) {
-          if (updatedConversation.messages.length === 1) {
-            const { content } = message;
-            const customName = content.length > 30 ? content.substring(0, 30) + '...' : content;
-            updatedConversation = {
-              ...updatedConversation,
-              name: customName,
-            };
-          }
           homeDispatch({ field: 'loading', value: false });
           const reader = data.getReader();
           const decoder = new TextDecoder();
           let done = false;
-          let isFirst = false;
           let text = '';
+          let abort = false;
+          const abortListener = () => {
+            abort = true;
+          };
+          abortTarget?.addEventListener('abort', abortListener);
           while (!done) {
-            if (stopConversationRef.current === true) {
+            if (abort) {
               controller.abort();
+              abortTarget?.removeEventListener('abort', abortListener);
               done = true;
               break;
             }
@@ -326,8 +332,12 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
             }
             return conversation;
           });
-          if (updatedConversations.length === 0) {
+          // if (updatedConversations.length === 0) {
+          //   updatedConversations.push(updatedConversation);
+          // }
+          if (isNewConversation) {
             updatedConversations.push(updatedConversation);
+            homeDispatch({ field: 'isNewConversation', value: false });
           }
           homeDispatch({ field: 'conversations', value: updatedConversations });
           saveConversations(updatedConversations);
@@ -345,10 +355,14 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
           if (res.ok) {
             const convoName = (await res.json()).name;
             if (updatedConversation.name === 'New Conversation') {
-              handleUpdateConversation(updatedConversation, {
-                key: 'name',
-                value: convoName,
-              });
+              handleUpdateConversation(
+                updatedConversation,
+                {
+                  key: 'name',
+                  value: convoName,
+                },
+                updatedConversations,
+              );
             }
           }
         } else {
@@ -424,10 +438,14 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
       confirm(t<string>('Are you sure you want to clear all messages?')) &&
       selectedConversation
     ) {
-      handleUpdateConversation(selectedConversation, {
-        key: 'messages',
-        value: [],
-      });
+      handleUpdateConversation(
+        selectedConversation,
+        {
+          key: 'messages',
+          value: [],
+        },
+        conversations,
+      );
     }
   };
 
@@ -472,10 +490,10 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
     };
   }, [messagesEndRef]);
 
-  const messages = selectedConversation?.messages.length
-    ? selectedConversation?.messages
-    : displayedLinkedMessages(selectedConversation!);
-
+  const currentConversation = selectedConversation;
+  const messages = currentConversation?.messages.length
+    ? currentConversation?.messages
+    : displayedLinkedMessages(currentConversation!);
   return (
     <div className="relative flex-1 overflow-hidden bg-white dark:bg-[#343541]">
       {!(apiKey || serverSideApiKeyIsSet) ? (
@@ -542,20 +560,28 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
                         conversation={selectedConversation!}
                         prompts={prompts}
                         onChangePrompt={(prompt) =>
-                          handleUpdateConversation(selectedConversation!, {
-                            key: 'prompt',
-                            value: prompt,
-                          })
+                          handleUpdateConversation(
+                            selectedConversation!,
+                            {
+                              key: 'prompt',
+                              value: prompt,
+                            },
+                            conversations,
+                          )
                         }
                       />
 
                       <TemperatureSlider
                         label={t('Temperature')}
                         onChangeTemperature={(temperature) =>
-                          handleUpdateConversation(selectedConversation!, {
-                            key: 'temperature',
-                            value: temperature,
-                          })
+                          handleUpdateConversation(
+                            selectedConversation!,
+                            {
+                              key: 'temperature',
+                              value: temperature,
+                            },
+                            conversations,
+                          )
                         }
                       />
                     </div>

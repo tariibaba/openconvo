@@ -95,6 +95,10 @@ const Home = ({ serverSideApiKeyIsSet, serverSidePluginKeysSet, defaultModelId }
       field: 'selectedConversation',
       value: conversation,
     });
+    dispatch({
+      field: 'isNewConversation',
+      value: false,
+    });
 
     saveConversation(conversation);
   };
@@ -187,23 +191,23 @@ const Home = ({ serverSideApiKeyIsSet, serverSidePluginKeysSet, defaultModelId }
       folderId: null,
     };
 
-    const updatedConversations = [...conversations, newConversation];
-
     dispatch({ field: 'selectedConversation', value: newConversation });
-    dispatch({ field: 'conversations', value: updatedConversations });
+    dispatch({ field: 'isNewConversation', value: true });
 
     saveConversation(newConversation);
-    saveConversations(updatedConversations);
 
     dispatch({ field: 'loading', value: false });
   };
 
-  const handleUpdateConversation = (conversation: Conversation, data: KeyValuePair) => {
+  const handleUpdateConversation = (
+    conversation: Conversation,
+    data: KeyValuePair,
+    conversations: Conversation[],
+  ) => {
     const updatedConversation = {
       ...conversation,
       [data.key]: data.value,
     };
-
     const { single, all } = updateConversation(updatedConversation, conversations);
 
     dispatch({ field: 'selectedConversation', value: single });

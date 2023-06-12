@@ -71,17 +71,12 @@ export const Chatbar = () => {
     } else {
       homeDispatch({ field: 'pluginKeys', value: [...pluginKeys, pluginKey] });
 
-      localStorage.setItem(
-        'pluginKeys',
-        JSON.stringify([...pluginKeys, pluginKey]),
-      );
+      localStorage.setItem('pluginKeys', JSON.stringify([...pluginKeys, pluginKey]));
     }
   };
 
   const handleClearPluginKey = (pluginKey: PluginKey) => {
-    const updatedPluginKeys = pluginKeys.filter(
-      (key) => key.pluginId !== pluginKey.pluginId,
-    );
+    const updatedPluginKeys = pluginKeys.filter((key) => key.pluginId !== pluginKey.pluginId);
 
     if (updatedPluginKeys.length === 0) {
       homeDispatch({ field: 'pluginKeys', value: [] });
@@ -139,9 +134,7 @@ export const Chatbar = () => {
   };
 
   const handleDeleteConversation = (conversation: Conversation) => {
-    const updatedConversations = conversations.filter(
-      (c) => c.id !== conversation.id,
-    );
+    const updatedConversations = conversations.filter((c) => c.id !== conversation.id);
 
     homeDispatch({ field: 'conversations', value: updatedConversations });
     chatDispatch({ field: 'searchTerm', value: '' });
@@ -182,7 +175,7 @@ export const Chatbar = () => {
   const handleDrop = (e: any) => {
     if (e.dataTransfer) {
       const conversation = JSON.parse(e.dataTransfer.getData('conversation'));
-      handleUpdateConversation(conversation, { key: 'folderId', value: 0 });
+      handleUpdateConversation(conversation, { key: 'folderId', value: 0 }, conversations);
       chatDispatch({ field: 'searchTerm', value: '' });
       e.target.style.background = 'none';
     }

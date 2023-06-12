@@ -28,6 +28,8 @@ export interface HomeInitialState {
   serverSideApiKeyIsSet: boolean;
   serverSidePluginKeysSet: boolean;
   messageStreamingId: string | undefined;
+  isNewConversation: boolean;
+  abortTarget: EventTarget;
 }
 
 export const initialState: HomeInitialState = {
@@ -37,6 +39,8 @@ export const initialState: HomeInitialState = {
   lightMode: 'dark',
   messageIsStreaming: false,
   messageStreamingId: undefined,
+  isNewConversation: true,
+  abortTarget: new EventTarget(),
   modelError: null,
   models: [],
   folders: [],

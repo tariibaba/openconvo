@@ -50,7 +50,7 @@ export const ChatInput = ({
   const { t } = useTranslation('chat');
 
   const {
-    state: { selectedConversation, messageIsStreaming, prompts, messageStreamingId },
+    state: { selectedConversation, messageIsStreaming, prompts, messageStreamingId, abortTarget },
 
     dispatch: homeDispatch,
   } = useContext(HomeContext);
@@ -109,10 +109,8 @@ export const ChatInput = ({
   };
 
   const handleStopConversation = () => {
-    stopConversationRef.current = true;
-    setTimeout(() => {
-      stopConversationRef.current = false;
-    }, 1000);
+    const event = new CustomEvent('abort');
+    abortTarget?.dispatchEvent(event);
   };
 
   const isMobile = () => {

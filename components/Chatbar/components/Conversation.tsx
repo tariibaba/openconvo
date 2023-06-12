@@ -21,7 +21,7 @@ interface Props {
 
 export const ConversationComponent = ({ conversation }: Props) => {
   const {
-    state: { selectedConversation, messageIsStreaming },
+    state: { selectedConversation, messageIsStreaming, conversations },
     handleSelectConversation,
     handleUpdateConversation,
   } = useContext(HomeContext);
@@ -46,10 +46,14 @@ export const ConversationComponent = ({ conversation }: Props) => {
 
   const handleRename = (conversation: Conversation) => {
     if (renameValue.trim().length > 0) {
-      handleUpdateConversation(conversation, {
-        key: 'name',
-        value: renameValue,
-      });
+      handleUpdateConversation(
+        conversation,
+        {
+          key: 'name',
+          value: renameValue,
+        },
+        conversations,
+      );
       setRenameValue('');
       setIsRenaming(false);
     }
