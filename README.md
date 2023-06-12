@@ -28,7 +28,7 @@ Expect frequent improvements.
 **1. Clone Repo**
 
 ```bash
-git clone https://github.com/mckaywrigley/chatbot-ui.git
+git clone https://github.com/tariibaba/openconvo.git
 ```
 
 **2. Install Dependencies**
