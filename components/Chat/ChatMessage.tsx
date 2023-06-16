@@ -62,10 +62,8 @@ export const ChatMessage: FC<Props> = memo(({ loading, message, messageIndex, on
   };
 
   const handleEditMessage = () => {
-    if (message.content != messageContent) {
-      if (selectedConversation && onEdit) {
-        onEdit({ ...message, content: messageContent });
-      }
+    if (selectedConversation && onEdit) {
+      onEdit({ ...message, content: messageContent });
     }
     setIsEditing(false);
   };
