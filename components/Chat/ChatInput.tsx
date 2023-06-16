@@ -50,7 +50,14 @@ export const ChatInput = ({
   const { t } = useTranslation('chat');
 
   const {
-    state: { selectedConversation, messageIsStreaming, prompts, messageStreamingId, abortTarget },
+    state: {
+      selectedConversation,
+      messageIsStreaming,
+      prompts,
+      messageStreamingId,
+      abortTarget,
+      isNewConversation,
+    },
 
     dispatch: homeDispatch,
   } = useContext(HomeContext);
@@ -107,6 +114,13 @@ export const ChatInput = ({
       textareaRef.current.blur();
     }
   };
+
+  useEffect(() => {
+    if (isNewConversation) {
+      console.log('will focus');
+      textareaRef.current?.focus();
+    }
+  }, [isNewConversation]);
 
   const handleStopConversation = () => {
     const event = new CustomEvent('abort');
