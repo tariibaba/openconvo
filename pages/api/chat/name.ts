@@ -23,7 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const prompt = new PromptTemplate({
       template:
-        "Provide a suitable conversation topic less than 5 words for this conversation between a human user and an AI assistant, focus more on the user's message:\nConversation: {conversation}\n\nTopic:",
+        'Provide a suitable conversation topic less than 5 words for this conversation between a human user and an AI assistant:\nConversation: {conversation}\n\nTopic:',
       inputVariables: ['conversation'],
     });
     const chain = new LLMChain({ llm: model, prompt });
@@ -32,7 +32,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .map((message) => `${message.role === 'user' ? 'User:' : 'Assistant:'}: ${message.content}`)
       .join('\n');
     const result = await chain.call({ conversation: conversationText });
-    const topic = result.text.replace(/\.*$/g, '');
+    const topic = result.text.replace(/^"?(.*?)"?\.*$/g, '$1');
     res.status(200).json({ name: topic });
   } catch (error) {
     console.error(error);
