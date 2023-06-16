@@ -1,4 +1,6 @@
+import { Analytics } from '@vercel/analytics/react';
 import { Toaster } from 'react-hot-toast';
+import { HotkeysProvider } from 'react-hotkeys-hook';
 import { QueryClient, QueryClientProvider } from 'react-query';
 
 import { appWithTranslation } from 'next-i18next';
@@ -16,7 +18,10 @@ function App({ Component, pageProps }: AppProps<{}>) {
     <div className={inter.className}>
       <Toaster />
       <QueryClientProvider client={queryClient}>
-        <Component {...pageProps} />
+        <HotkeysProvider>
+          <Component {...pageProps} />
+          <Analytics />
+        </HotkeysProvider>
       </QueryClientProvider>
     </div>
   );
