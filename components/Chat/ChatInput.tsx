@@ -104,11 +104,32 @@ export const ChatInput = ({
   );
 
   useHotkeys(
+    'r',
+    (event) => {
+      event.preventDefault();
+      if (!messageIsStreaming) {
+        onRegenerate();
+      }
+    },
+    [messageIsStreaming],
+  );
+
+  useHotkeys(
     'space',
-    (event: any) => {
+    (event) => {
       event.preventDefault();
       textareaRef?.current?.focus();
     },
+    [],
+  );
+
+  useHotkeys(
+    'shift+space',
+    (event) => {
+      event.preventDefault();
+      textareaRef?.current?.focus();
+    },
+    { enableOnFormTags: true },
     [],
   );
 
