@@ -15,15 +15,17 @@ function App({ Component, pageProps }: AppProps<{}>) {
   const queryClient = new QueryClient();
 
   return (
-    <div className={inter.className}>
-      <Toaster />
-      <QueryClientProvider client={queryClient}>
-        <HotkeysProvider>
-          <Component {...pageProps} />
-          <Analytics />
-        </HotkeysProvider>
-      </QueryClientProvider>
-    </div>
+    <>
+      <div className={inter.className}>
+        <Toaster />
+        <QueryClientProvider client={queryClient}>
+          <HotkeysProvider>
+            <Component {...pageProps} />
+          </HotkeysProvider>
+        </QueryClientProvider>
+      </div>
+      <Analytics />
+    </>
   );
 }
 
