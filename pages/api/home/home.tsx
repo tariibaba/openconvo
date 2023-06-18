@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useHotkeys } from 'react-hotkeys-hook';
 import { useQuery } from 'react-query';
 
 import { GetServerSideProps } from 'next';
@@ -235,6 +236,18 @@ const Home = ({ serverSideApiKeyIsSet, serverSidePluginKeysSet, defaultModelId }
         value: serverSidePluginKeysSet,
       });
   }, [defaultModelId, serverSideApiKeyIsSet, serverSidePluginKeysSet]);
+
+  useHotkeys(
+    'ctrl+space',
+    (event) => {
+      event.preventDefault();
+      if (selectedConversation) {
+        handleNewConversation();
+      }
+    },
+    { enableOnFormTags: true },
+    [selectedConversation],
+  );
 
   // ON LOAD --------------------------------------------
 

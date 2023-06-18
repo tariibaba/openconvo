@@ -15,6 +15,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { useHotkeys } from 'react-hotkeys-hook';
 
 import { useTranslation } from 'next-i18next';
 
@@ -76,6 +77,39 @@ export const ChatInput = ({
 
   const filteredPrompts = prompts.filter((prompt) =>
     prompt.name.toLowerCase().includes(promptInputValue.toLowerCase()),
+  );
+
+  useHotkeys(
+    'esc',
+    (event) => {
+      event.preventDefault();
+      if (messageIsStreaming) {
+        handleStopConversation();
+      }
+    },
+    { enableOnFormTags: true },
+    [messageIsStreaming],
+  );
+
+  useHotkeys(
+    'shift+r',
+    (event) => {
+      event.preventDefault();
+      if (!messageIsStreaming) {
+        onRegenerate();
+      }
+    },
+    { enableOnFormTags: true },
+    [messageIsStreaming],
+  );
+
+  useHotkeys(
+    'space',
+    (event: any) => {
+      event.preventDefault();
+      textareaRef?.current?.focus();
+    },
+    [],
   );
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
