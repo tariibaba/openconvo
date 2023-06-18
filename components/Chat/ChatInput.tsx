@@ -92,7 +92,7 @@ export const ChatInput = ({
   );
 
   useHotkeys(
-    'shift+r',
+    'alt+r',
     (event) => {
       event.preventDefault();
       if (!messageIsStreaming) {
@@ -124,7 +124,7 @@ export const ChatInput = ({
   );
 
   useHotkeys(
-    'shift+space',
+    'alt+space',
     (event) => {
       event.preventDefault();
       textareaRef?.current?.focus();
