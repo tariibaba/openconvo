@@ -1,88 +1,42 @@
 # OpenConvo
 
-OpenConvo is an open source chat UI for AI models.
+OpenConvo is a 🎨creative open-source AI chatbot.🤖 Swiftly & efficiently conquer tasks🏃‍♂️, revolutionize your world🌐, and level up with AI magic.
 
-It is based on [ChatbotUI](https://github.com/mckaywrigley/chatbot-ui).
+![](public/screenshots/screenshot1.png)
 
-<!-- See a [demo](https://twitter.com/mckaywrigley/status/1640380021423603713?s=46&t=AowqkodyK6B4JccSOxSPew). -->
+## Why OpenConvo over ChatGPT??
 
-![OpenConvo](./public/screenshots/screenshot-0402023.jpg)
+### **Save cash with pay as you go**
+
+Why pay $20 per month for what you'll probably never use? Just set your OpenAI key and start paying for only what you use.
+Spend dimes and cents don't spend $20!
+
+![Demo](public/screenshots/demo1.gif)
+
+### **Open-source chatbot**
+
+OpenConvo is an open-source chatbot with superb customization! Enjoy its community-driven development for continuous improvement & evolution✨ based on user feedback.
+
+![Open-source chatbot](public/screenshots/open-source-chatbot.png)
+
+### **Prompt collection**
+
+![Prompt Example](public/screenshots/openconvo-prompt-example.gif)
+
+Boost productivity!
+
+Store your frequent & essential prompts right in the chatbot for quick & easy access. Craft your message in no time and gain precise answers.
 
 ## Updates
 
-OpenConvo will be updated over time.
+OpenConvo will be continuously receive more powerful updates over time.
 
 Expect frequent improvements.
-
-**Next up:**
-
-- [ ] Sharing
-- [ ] "Bots"
-
-## Deploy
-
-**Vercel**
-
-## Running Locally
-
-**1. Clone Repo**
-
-```bash
-git clone https://github.com/tariibaba/openconvo.git
-```
-
-**2. Install Dependencies**
-
-```bash
-npm i
-```
-
-**3. Provide OpenAI API Key**
-
-Create a .env.local file in the root of the repo with your OpenAI API Key:
-
-```bash
-OPENAI_API_KEY=YOUR_KEY
-```
-
-> You can set `OPENAI_API_HOST` where access to the official OpenAI host is restricted or unavailable, allowing users to configure an alternative host for their specific needs.
-
-> Additionally, if you have multiple OpenAI Organizations, you can set `OPENAI_ORGANIZATION` to specify one.
-
-**4. Run App**
-
-```bash
-npm run dev
-```
-
-**5. Use It**
-
-You should be able to start chatting.
-
-## Configuration
-
-When deploying the application, the following environment variables can be set:
-
-| Environment Variable              | Default value                  | Description                                                                                                                               |
-| --------------------------------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| OPENAI_API_KEY                    |                                | The default API key used for authentication with OpenAI                                                                                   |
-| OPENAI_API_HOST                   | `https://api.openai.com`       | The base url, for Azure use `https://<endpoint>.openai.azure.com`                                                                         |
-| OPENAI_API_TYPE                   | `openai`                       | The API type, options are `openai` or `azure`                                                                                             |
-| OPENAI_API_VERSION                | `2023-03-15-preview`           | Only applicable for Azure OpenAI                                                                                                          |
-| AZURE_DEPLOYMENT_ID               |                                | Needed when Azure OpenAI, Ref [Azure OpenAI API](https://learn.microsoft.com/zh-cn/azure/cognitive-services/openai/reference#completions) |
-| OPENAI_ORGANIZATION               |                                | Your OpenAI organization ID                                                                                                               |
-| DEFAULT_MODEL                     | `gpt-3.5-turbo`                | The default model to use on new conversations, for Azure use `gpt-35-turbo`                                                               |
-| NEXT_PUBLIC_DEFAULT_SYSTEM_PROMPT | [see here](utils/app/const.ts) | The default system prompt to use on new conversations                                                                                     |
-| NEXT_PUBLIC_DEFAULT_TEMPERATURE   | 1                              | The default temperature to use on new conversations                                                                                       |
-| GOOGLE_API_KEY                    |                                | See [Custom Search JSON API documentation][GCSE]                                                                                          |
-| GOOGLE_CSE_ID                     |                                | See [Custom Search JSON API documentation][GCSE]                                                                                          |
-
-If you do not provide an OpenAI API key with `OPENAI_API_KEY`, users will have to provide their own key.
-
-If you don't have an OpenAI API key, you can get one [here](https://platform.openai.com/account/api-keys).
 
 ## Contact
 
 If you have any questions, feel free to reach out to Tari Ibaba on [Twitter](https://twitter.com/Tari_Ibaba).
 
-[GCSE]: https://developers.google.com/custom-search/v1/overview
+## Credit
+
+- [ChatbotUI](https://github.com/mckaywrigley/chatbot-ui)
