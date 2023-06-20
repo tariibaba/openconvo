@@ -43,10 +43,10 @@ export const SettingDialog: FC<Props> = ({ open, onClose }) => {
     };
   }, [onClose]);
 
-  const handleSave = () => {
+  useEffect(() => {
     homeDispatch({ field: 'lightMode', value: state.theme });
     saveSettings(state);
-  };
+  }, [state.theme]);
 
   // Render nothing if the dialog is not open.
   if (!open) {
@@ -58,10 +58,7 @@ export const SettingDialog: FC<Props> = ({ open, onClose }) => {
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
       <div className="fixed inset-0 z-10 overflow-hidden">
         <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-          <div
-            className="hidden sm:inline-block sm:h-screen sm:align-middle"
-            aria-hidden="true"
-          />
+          <div className="hidden sm:inline-block sm:h-screen sm:align-middle" aria-hidden="true" />
 
           <div
             ref={modalRef}
@@ -79,24 +76,13 @@ export const SettingDialog: FC<Props> = ({ open, onClose }) => {
             <select
               className="w-full cursor-pointer bg-transparent p-2 text-neutral-700 dark:text-neutral-200"
               value={state.theme}
-              onChange={(event) =>
-                dispatch({ field: 'theme', value: event.target.value })
-              }
+              onChange={(event) => {
+                dispatch({ field: 'theme', value: event.target.value });
+              }}
             >
               <option value="dark">{t('Dark mode')}</option>
               <option value="light">{t('Light mode')}</option>
             </select>
-
-            <button
-              type="button"
-              className="w-full px-4 py-2 mt-6 border rounded-lg shadow border-neutral-500 text-neutral-900 hover:bg-neutral-100 focus:outline-none dark:border-neutral-800 dark:border-opacity-50 dark:bg-white dark:text-black dark:hover:bg-neutral-300"
-              onClick={() => {
-                handleSave();
-                onClose();
-              }}
-            >
-              {t('Save')}
-            </button>
           </div>
         </div>
       </div>
