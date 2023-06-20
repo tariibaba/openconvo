@@ -35,12 +35,12 @@ export const Key: FC<Props> = ({ apiKey, onApiKeyChange }) => {
   }, [isChanging]);
 
   return isChanging ? (
-    <div className="duration:200 flex w-full cursor-pointer items-center rounded-md py-3 px-3 transition-colors hover:bg-gray-500/10">
+    <div className="duration:200 flex w-full cursor-pointer items-center rounded-md py-3 px-3 transition-colors hover:bg-gray-500/10 text-black">
       <IconKey size={18} />
 
       <input
         ref={inputRef}
-        className="ml-2 h-[20px] flex-1 overflow-hidden overflow-ellipsis border-b border-neutral-400 bg-transparent pr-1 text-[12.5px] leading-3 text-left text-white outline-none focus:border-neutral-100"
+        className="ml-2 h-[20px] flex-1 overflow-hidden overflow-ellipsis border-b border-black dark:border-neutral-400 bg-transparent pr-1 text-[12.5px] leading-3 text-left text-black dark:text-neutral-100 outline-none focus:border-black dark:focus:border-neutral-100"
         type="password"
         value={newKey}
         onChange={(e) => setNewKey(e.target.value)}
@@ -50,7 +50,7 @@ export const Key: FC<Props> = ({ apiKey, onApiKeyChange }) => {
 
       <div className="flex w-[40px]">
         <IconCheck
-          className="ml-auto min-w-[20px] text-neutral-400 hover:text-neutral-100"
+          className="ml-auto min-w-[20px] text-black hover:text-black/50 dark:text-neutral-400 dark:hover:text-neutral-100"
           size={18}
           onClick={(e) => {
             e.stopPropagation();
@@ -59,7 +59,7 @@ export const Key: FC<Props> = ({ apiKey, onApiKeyChange }) => {
         />
 
         <IconX
-          className="ml-auto min-w-[20px] text-neutral-400 hover:text-neutral-100"
+          className="ml-auto min-w-[20px] text-black hover:text-black/50 dark:text-neutral-400 dark:hover:text-neutral-100"
           size={18}
           onClick={(e) => {
             e.stopPropagation();

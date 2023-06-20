@@ -1,16 +1,5 @@
-import {
-  IconBulbFilled,
-  IconCheck,
-  IconTrash,
-  IconX,
-} from '@tabler/icons-react';
-import {
-  DragEvent,
-  MouseEventHandler,
-  useContext,
-  useEffect,
-  useState,
-} from 'react';
+import { IconBulbFilled, IconCheck, IconTrash, IconX } from '@tabler/icons-react';
+import { DragEvent, MouseEventHandler, useContext, useEffect, useState } from 'react';
 
 import { Prompt } from '@/types/prompt';
 
@@ -78,7 +67,7 @@ export const PromptComponent = ({ prompt }: Props) => {
   return (
     <div className="relative flex items-center">
       <button
-        className="flex w-full cursor-pointer items-center gap-3 rounded-lg p-3 text-sm transition-colors duration-200 hover:bg-[#343541]/90"
+        className="flex w-full cursor-pointer items-center gap-3 rounded-lg p-3 text-sm transition-colors duration-200 text-black dark:text-neutral-400 hover:bg-neutral-200 hover:bg-[#343541]/90"
         draggable="true"
         onClick={(e) => {
           e.stopPropagation();
