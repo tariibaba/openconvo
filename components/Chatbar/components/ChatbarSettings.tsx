@@ -19,13 +19,7 @@ export const ChatbarSettings = () => {
   const [isSettingDialogOpen, setIsSettingDialog] = useState<boolean>(false);
 
   const {
-    state: {
-      apiKey,
-      lightMode,
-      serverSideApiKeyIsSet,
-      serverSidePluginKeysSet,
-      conversations,
-    },
+    state: { apiKey, lightMode, serverSideApiKeyIsSet, serverSidePluginKeysSet, conversations },
     dispatch: homeDispatch,
   } = useContext(HomeContext);
 
@@ -37,7 +31,7 @@ export const ChatbarSettings = () => {
   } = useContext(ChatbarContext);
 
   return (
-    <div className="flex flex-col items-center space-y-1 border-t border-white/20 pt-1 text-sm">
+    <div className="flex flex-col items-center space-y-1 border-t border-black/20 dark:border-white/20 pt-1 text-sm">
       {conversations.length > 0 ? (
         <ClearConversations onClearConversations={handleClearConversations} />
       ) : null}
@@ -56,9 +50,7 @@ export const ChatbarSettings = () => {
         onClick={() => setIsSettingDialog(true)}
       />
 
-      {!serverSideApiKeyIsSet ? (
-        <Key apiKey={apiKey} onApiKeyChange={handleApiKeyChange} />
-      ) : null}
+      {!serverSideApiKeyIsSet ? <Key apiKey={apiKey} onApiKeyChange={handleApiKeyChange} /> : null}
 
       {!serverSidePluginKeysSet ? <PluginKeys /> : null}
 

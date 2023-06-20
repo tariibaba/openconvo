@@ -7,7 +7,7 @@ interface Props {
 
 const SidebarActionButton = ({ handleClick, children }: Props) => (
   <button
-    className="min-w-[20px] p-1 text-neutral-400 hover:text-neutral-100"
+    className="min-w-[20px] p-1 text-black dark:text-gray-300 hover:text-black/60 dark:hover:text-neutral-100"
     onClick={handleClick}
   >
     {children}
