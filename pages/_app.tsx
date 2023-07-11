@@ -18,7 +18,7 @@ function App({ Component, pageProps }: AppProps<{}>) {
   const queryClient = new QueryClient();
 
   useEffect(() => {
-    if (process.env.NODE_ENV === 'production') return;
+    if (process.env.NODE_ENV !== 'production') return;
     const key = process.env.NEXT_PUBLIC_FIREBASE_SERVICE_ACCOUNT_KEY!;
     const firebaseConfig = JSON.parse(key);
     const app = initializeApp(firebaseConfig);
